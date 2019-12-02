@@ -18,7 +18,7 @@ func solvePart1(_ string: String) -> String {
     return "Answer part 1 here"
 }
 
-
+//print(solvePart1(test1))
 //assert(solvePart1(test1) == 12)
 
 // Part 2
@@ -27,6 +27,7 @@ func solvePart2(_ string: String) -> String {
     return "Answer part 2 here"
 }
 
+//print(solvePart2(test2))
 //assert(solvePart2(test2) == "")
 
 func findAnswers(_ string: String) {
