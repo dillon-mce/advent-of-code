@@ -36,7 +36,18 @@ def test_run(day):
     file_name = "./Day-" + day + ".swift"
     call([file_name])
 
-# TODO: add a build and run option to compile the script and run that.
+# Compiles the script for the given day with the optimize flag and runs it, if it exists
+def build_run_script(day):
+    file_name = "./Day-" + day + ".swift"
+    input_name = "Day-" + day + "-Input.txt"
+    output_name = ".run-day-" + day
+    if options.verbose: print("Reading input")
+    process = subprocess.Popen(["cat", input_name], stdout=subprocess.PIPE)
+    input = process.stdout.read()
+    print("Compiling the script...")
+    call(["swiftc", "-O", "-o", output_name, file_name])
+    print("Running the script...")
+    call(["./" + output_name, input])
 
 # Set up option parser
 parser = optparse.OptionParser()
@@ -44,6 +55,7 @@ parser.add_option("-i", "--install", action="store_true", dest="install", defaul
 parser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="run the script with no input")
 parser.add_option("-n", "--new", dest="new", help="create a new day's script")
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="run the script with all diagnostic prints")
+parser.add_option("-b", "--build", action="store_true", dest="build", default=False, help="compile the script using the optomize flag and run it")
 
 (options, args) = parser.parse_args()
 
@@ -69,6 +81,8 @@ if len(args) > 0:
     for day in args:
         if options.test:
             test_run(day)
+        elif options.build:
+            build_run_script(day)
         else:
             run_script(day)
     exit(0)
