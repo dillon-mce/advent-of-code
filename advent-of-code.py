@@ -18,6 +18,7 @@ def install():
 def new_script(day):
     file_name = "Day-" + day + ".swift"
     input_name = "Day-" + day + "-Input.txt"
+    call(["touch", "_template.swift"])
     call(["cp", "-n", "_template.swift", file_name])
     call(["chmod", "+x", file_name])
     call(["touch", input_name])
