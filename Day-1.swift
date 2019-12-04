@@ -30,12 +30,10 @@ func solvePart2(_ string: String) -> Int {
 }
 
 func recursiveFuel(_ num: Int) -> Int {
-    guard num > 0 else {
+    let fuel = num / 3 - 2
+    guard fuel > 0 else {
         return 0
     }
-
-    var fuel = num / 3 - 2
-    fuel = fuel < 0 ? 0 : fuel
     return fuel + recursiveFuel(fuel)
 }
 
