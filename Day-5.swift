@@ -10,11 +10,24 @@ let underscores = Array(repeating: "—", count: day.count).joined()
 print("\n\(underscores)\n\(day)\n\(underscores)")
 
 // MARK: Custom Types
+let verbose = false
+let functions = false
+let lines = false
+
+func vprint(_ string: String, separator: String = " ", terminator: String = "\n", function: String = #function, line: Int = #line) {
+    if verbose {
+        let function = functions ? function : ""
+        let line = lines ? String(line) : ""
+        print(function, line, string, separator: separator, terminator: terminator)
+    }
+}
+
 class Computer {
     enum Operation {
         case binary((Int, Int, Int) -> Void)
         case jump((Int, Int) -> Void)
-        case single((Int) -> Void)
+        case save((Int) -> Void)
+        case load((Int) -> Void)
         case halt
 
         func increment() -> Int {
@@ -23,7 +36,7 @@ class Computer {
                 return 4
             case .jump:
                 return 3
-            case .single:
+            case .save, .load:
                 return 2
             default:
                 return 1
@@ -33,38 +46,44 @@ class Computer {
 
     // MARK: Binary
     private func add(_ a: Int, _ b: Int, c: Int) {
-//        print("memory[\(c)] = \(a) + \(b)")
+        vprint("memory[\(c)] = \(a) + \(b)")
         memory[c] = a + b
     }
     private func mul(_ a: Int, _ b: Int, c: Int) {
-//        print("memory[\(c)] = \(a) * \(b)")
+        vprint("memory[\(c)] = \(a) * \(b)")
         memory[c] = a * b
     }
 
     private func lth(_ a: Int, _ b: Int, c: Int) {
-        print("memory[\(c)] = \(a) < \(b): \(a < b ? 1 : 0)")
+        vprint("memory[\(c)] = \(a) < \(b): \(a < b ? 1 : 0)")
         memory[c] = a < b ? 1 : 0
     }
 
     private func eq(_ a: Int, _ b: Int, c: Int) {
-//        print("memory[\(c)] = \(a) == \(b): \(a == b ? 1 : 0)")
+        vprint("memory[\(c)] = \(a) == \(b): \(a == b ? 1 : 0)")
         memory[c] = a == b ? 1 : 0
     }
 
     // MARK: - Jump
     private func jit(_ a: Int, _ b: Int) {
+        vprint("JIT(\(a), \(b))")
         if a != 0 {
             pointer = b
+            vprint("\(a) != 0, pointer = \(pointer)")
         } else {
             pointer += 3
+            vprint("\(a) == 0, pointer = \(pointer)")
         }
     }
 
     private func jif(_ a: Int, _ b: Int) {
+        vprint("JIF(\(a), \(b))")
         if a == 0 {
             pointer = b
+            vprint("\(a) == 0, pointer = \(pointer)")
         } else {
             pointer += 3
+            vprint("\(a) != 0, pointer = \(pointer)")
         }
     }
 
@@ -74,16 +93,14 @@ class Computer {
     }
 
     private func load(_ a: Int) {
-        stdout = memory[a]
+        stdout = a
     }
-
-
 
     lazy var operations: [Int: Operation] = [
         1: .binary(add),
         2: .binary(mul),
-        3: .single(save),
-        4: .single(load),
+        3: .save(save),
+        4: .load(load),
         5: .jump(jit),
         6: .jump(jif),
         7: .binary(lth),
@@ -94,21 +111,21 @@ class Computer {
     var storage: [Int] = []
     var stdin: Int = -1
     private(set) var stdout: Int = -1 {
-        didSet { print(stdout) }
+        didSet { if verbose { print(stdout) } }
     }
     private var memory: [Int] = []
     private var pointer = 0
 
-    func run() -> [Int] {
+    @discardableResult func run() -> [Int] {
         memory = storage
         while true {
             var instruction = memory[pointer]
-            print("Pointer \(pointer)")
-            print("Instruction \(instruction)")
+            vprint("Pointer \(pointer)")
+            vprint("Instruction \(instruction)")
             let opCode = instruction % 100
             instruction /= 100
-            print("Opcode \(opCode)")
-            print("ParamCode \(instruction)")
+            vprint("Opcode \(opCode)")
+            vprint("ParamCode \(instruction)")
             guard let op = operations[opCode] else {
                 return memory
             }
@@ -132,8 +149,13 @@ class Computer {
                 let b = instruction % 10 == 0 ? memory[y] : y
 
                 handler(a, b)
-            case .single(let handler):
+            case .save(let handler):
                 let a = memory[pointer+1]
+                handler(a)
+                pointer += op.increment()
+            case .load(let handler):
+                let x = memory[pointer+1]
+                let a = instruction % 10 == 0 ? memory[x] : x
 
                 handler(a)
                 pointer += op.increment()
@@ -149,28 +171,26 @@ let test1 = "1002,4,3,4,33"
 let test2 = "3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99"
 
 // MARK: Part 1
-func solvePart1(_ string: String) -> String {
+func solvePart1(_ string: String, input: Int = 1) -> String {
     let computer = Computer()
     computer.storage = string.components(separatedBy: ",").compactMap { Int($0) }
-    computer.stdin = 1
-    let result = computer.run()
+    computer.stdin = input
+    computer.run()
     return "\(computer.stdout)"
 }
-
-//print(solvePart1(test2))
-//assert(solvePart1(test1) == 12)
 
 // MARK: Part 2
-func solvePart2(_ string: String) -> String {
+func solvePart2(_ string: String, input: Int = 5) -> String {
     let computer = Computer()
     computer.storage = string.components(separatedBy: ",").compactMap { Int($0) }
-    computer.stdin = 5
-    let result = computer.run()
+    computer.stdin = input
+    computer.run()
     return "\(computer.stdout)"
 }
 
-//print(solvePart2(test2))
-//assert(solvePart2(test2) == "")
+assert(solvePart2(test2, input: 5) == "999")
+assert(solvePart2(test2, input: 8) == "1000")
+assert(solvePart2(test2, input: 12) == "1001")
 
 // MARK: Execution
 func findAnswers(_ string: String) {
