@@ -35,7 +35,7 @@ class Computer {
             case .binary:
                 return 4
             case .jump:
-                return 3
+                return 0
             case .save, .load:
                 return 2
             default:
@@ -64,7 +64,7 @@ class Computer {
         memory[c] = a == b ? 1 : 0
     }
 
-    // MARK: - Jump
+    // MARK: Jump
     private func jit(_ a: Int, _ b: Int) {
         vprint("JIT(\(a), \(b))")
         if a != 0 {
@@ -87,7 +87,7 @@ class Computer {
         }
     }
 
-    // MARK: - Single
+    // MARK: Single
     private func save(_ a: Int) {
         memory[a] = stdin
     }
@@ -140,28 +140,25 @@ class Computer {
                 let c = memory[pointer+3]
 
                 handler(a, b, c)
-                pointer += op.increment()
             case .jump(let handler):
                 let x = memory[pointer+1]
                 let y = memory[pointer+2]
                 let a = instruction % 10 == 0 ? memory[x] : x
                 instruction /= 10
                 let b = instruction % 10 == 0 ? memory[y] : y
-
                 handler(a, b)
             case .save(let handler):
                 let a = memory[pointer+1]
                 handler(a)
-                pointer += op.increment()
             case .load(let handler):
                 let x = memory[pointer+1]
                 let a = instruction % 10 == 0 ? memory[x] : x
 
                 handler(a)
-                pointer += op.increment()
             case .halt:
                 return memory
             }
+            pointer += op.increment()
         }
     }
 }
