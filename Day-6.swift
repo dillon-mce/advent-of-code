@@ -3,14 +3,14 @@ import Cocoa
 
 // MARK: Input Handling
 let input = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : ""
-var day = "DAY "
+var day = "DAY 6"
 day += input == "" ? " – TEST" : ""
 let underscores = Array(repeating: "—", count: day.count).joined()
 
 print("\n\(underscores)\n\(day)\n\(underscores)")
 
 // MARK: Custom Types
-let verbose = true
+let verbose = false
 let functions = false
 let lines = true
 
@@ -23,7 +23,7 @@ func vprint(_ string: String, separator: String = " ", terminator: String = "\n"
 }
 
 struct Queue<T> {
-    var array = [T?]()
+    var array: [T?] = []
     var head = 0
 
     var isEmpty: Bool {
@@ -44,13 +44,17 @@ struct Queue<T> {
         array[head] = nil
         head += 1
 
+        resetHead()
+
+        return element
+    }
+
+    private mutating func resetHead() {
         let percentage = Double(head)/Double(array.count)
         if array.count > 50 && percentage > 0.25 {
             array.removeFirst(head)
             head = 0
         }
-
-        return element
     }
 
     var front: T? {
@@ -106,20 +110,16 @@ func parseInput(_ string: String) -> [String: [String]] {
     var dict: [String: [String]] = [:]
     lines.forEach {
         let key = $0[0]
-        dict[key, default: []].append($0[1])
+        let value = $0[1]
+        dict[key, default: []].append(value)
+        dict[value, default: []].append(key)
     }
     return dict
 }
 
-func findCenter(_ dict: [String: [String]]) -> String {
-    let orbiting = Set(dict.flatMap { $0.value })
-    return dict.keys.first { !orbiting.contains($0) } ?? "No center"
-}
-
 func calculateOrbits(_ dict: [String: [String]]) -> [String: Int] {
     var queue = Queue<String>()
-    let center = findCenter(dict)
-    vprint(center)
+    let center = "COM"
     queue.enqueue(center)
     var result: [String: Int] = [center: 0]
 
@@ -142,16 +142,12 @@ func calculateOrbits(_ dict: [String: [String]]) -> [String: Int] {
 assert(solvePart1(test1) == 42)
 
 // MARK: Part 2
-func solvePart2(_ string: String) -> String {
+func solvePart2(_ string: String) -> Int {
     let dict = parseInput(string)
-    let start = dict.first(where: { $0.value.contains("YOU") })!
-    let end = dict.first(where: { $0.value.contains("SAN") })!.key
-//    let distance = calculateJumps(dict, from: start, to: end)
-//    print(distance)
-    return "Answer part 2 here"
+    let jumps = calculateJumps(dict, from: "YOU", to: "SAN")
+    return jumps
 }
 
-// Just realized I'm doing a depth first search from 'YOU'. That won't work if I can only go down the graph. Probably need to rebuild the graph dict to include everything each point touches. Something to work on tomorrow.
 func calculateJumps(_ dict: [String: [String]], from start: String, to end: String) -> Int {
     var stack: [String] = []
     var visited: Set<String> = []
@@ -161,21 +157,23 @@ func calculateJumps(_ dict: [String: [String]], from start: String, to end: Stri
 
     while stack.count > 0 {
         let current = stack.popLast()!
-
+        vprint("Checking current: \(current)")
         if current == end {
             path.append(current)
             var parent = parents[current]
-            while var uParent = parent {
+            while let uParent = parent {
                 path.append(uParent)
                 parent = parents[uParent]
             }
-            return path.count
+            vprint("Path: \(path)")
+            return path.count - 3
         }
         visited.insert(current)
         guard let array = dict[current] else {
             print("Current (\(current)) wasn't found in the dictionary")
             continue
         }
+        vprint("Array: \(array)")
         for orbiting in array {
             if !visited.contains(orbiting) {
                 parents[orbiting] = current
@@ -187,7 +185,7 @@ func calculateJumps(_ dict: [String: [String]], from start: String, to end: Stri
 }
 
 //print(solvePart2(test2))
-//assert(solvePart2(test2) == "")
+assert(solvePart2(test2) == 4)
 
 // MARK: Execution
 func findAnswers(_ string: String) {
