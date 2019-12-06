@@ -9,6 +9,19 @@ let underscores = Array(repeating: "—", count: day.count).joined()
 
 print("\n\(underscores)\n\(day)\n\(underscores)")
 
+// MARK: Custom Types
+let verbose = false
+let functions = false
+let lines = false
+
+func vprint(_ string: String, separator: String = " ", terminator: String = "\n", function: String = #function, line: Int = #line) {
+    if verbose {
+        let function = functions ? function : ""
+        let line = lines ? String(line) : ""
+        print(function, line, string, separator: separator, terminator: terminator)
+    }
+}
+
 // MARK: Tests
 let test1 = ""
 let test2 = ""
