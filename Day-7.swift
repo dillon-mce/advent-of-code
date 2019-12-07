@@ -22,7 +22,9 @@ func vprint(_ string: String, separator: String = " ", terminator: String = "\n"
     }
 }
 
+// MARK: Computer
 class Computer {
+    // MARK: Operations
     enum Operation {
         case binary((Int, Int, Int) -> Void)
         case jump((Int, Int) -> Void)
@@ -91,11 +93,13 @@ class Computer {
     private func save(_ a: Int) {
         if stdin.count > 0 {
             memory[a] = stdin.removeFirst()
+        } else {
+            print("Trying to access stdin when it is empty")
         }
     }
 
     private func load(_ a: Int) {
-        outPipe.append(a)
+        stdout = [a]
     }
 
     lazy var operations: [Int: Operation] = [
@@ -110,23 +114,28 @@ class Computer {
         99: .halt
     ]
 
+    // MARK: Internal Variables
     var storage: [Int] = []
     var stdin: [Int] = []
-    private(set) var outPipe: [Int] = []
-    var stdout: Int? {
-        get {
-            if outPipe.count > 0 {
-                return outPipe.removeFirst()
-            } else {
-                return nil
-            }
-        }
-    }
+    private(set) var stdout: [Int] = []
     private var memory: [Int] = []
     private var pointer = 0
 
-    @discardableResult func run() -> [Int] {
+    // MARK: - Lifecycle
+    func parseProgram(_ string: String) {
+        let program = string.components(separatedBy: ",").compactMap { Int($0) }
+        let map = program.enumerated().map { "\($0.0): \($0.1)"}
+        vprint(map.joined(separator: "\n"))
+        storage = program
+    }
+
+    func boot() {
         memory = storage
+    }
+
+    @discardableResult func run() -> Int {
+        vprint("Pointer on enter: \(pointer)")
+        vprint("Stdin on enter: \(stdin)")
         while true {
             var instruction = memory[pointer]
             vprint("Pointer \(pointer)")
@@ -136,8 +145,7 @@ class Computer {
             vprint("Opcode \(opCode)")
             vprint("ParamCode \(instruction)")
             guard let op = operations[opCode] else {
-                return memory
-            }
+                return 99            }
             switch op {
             case .binary(let handler):
                 let x = memory[pointer+1]
@@ -157,15 +165,23 @@ class Computer {
                 let b = instruction % 10 == 0 ? memory[y] : y
                 handler(a, b)
             case .save(let handler):
+                if stdin.count > 0 {
                 let a = memory[pointer+1]
                 handler(a)
+                } else {
+                    vprint("Pointer on exit: \(pointer)")
+                    vprint("Stdout on exit: \(stdout)\n")
+                    return 1
+                }
             case .load(let handler):
                 let x = memory[pointer+1]
                 let a = instruction % 10 == 0 ? memory[x] : x
 
                 handler(a)
             case .halt:
-                return memory
+                vprint("Hit a halt instruction")
+                vprint("Stdout on exit: \(stdout)\n")
+                return 0
             }
             pointer += op.increment()
         }
@@ -180,29 +196,22 @@ let test4 = "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,
 
 // MARK: Part 1
 func solvePart1(_ string: String) -> Int {
-    let program = string.components(separatedBy: ",").compactMap { Int($0) }
-
-    let combos = getCombinations()
+    let combos = makeCombinations([0,1,2,3,4])
     var result = Int.min
     combos.forEach {
         var output = 0
         for instruction in $0 {
             let computer = Computer()
-            computer.storage = program
+            computer.parseProgram(string)
+            computer.boot()
             computer.stdin = [instruction, output]
             computer.run()
-            output = computer.stdout ?? -1
+            output = computer.stdout.last ?? -1
         }
         result = output > result ? output : result
     }
 
     return result
-}
-
-func getCombinations() -> [[Int]] {
-    let combos = makeCombinations([0,1,2,3,4])
-    vprint("Combos: \(combos)")
-    return combos
 }
 
 func makeCombinations(_ array: [Int]) -> [[Int]] {
@@ -225,48 +234,40 @@ assert(solvePart1(test2) == 65210)
 
 // MARK: Part 2
 func solvePart2(_ string: String) -> Int {
-    let program = string.components(separatedBy: ",").compactMap { Int($0) }
-    let combos = getCombinations()
+    let combos = makeCombinations([9,8,7,6,5])
     var result = Int.min
-//    combos.forEach {
+    combos.forEach { combo in
         var output = [0]
-        let second = [9,8,7,6,5]
-//        let total = $0 + second
-//        for instruction in total {
-//            let computer = Computer()
-//            computer.storage = program
-//            computer.stdin = [instruction, output]
-//            computer.run()
-//            output = computer.stdout
-//        }
-        let computers = (0..<5).map { _ -> Computer in
+        let computers = (0..<5).map { i -> Computer in
             let computer = Computer()
-            computer.storage = program
+            computer.parseProgram(string)
+            computer.stdin.append(combo[i])
+            computer.boot()
             return computer
         }
-//        for index in 0..<computers.count {
-//            computers[index].stdin = [$0[index]] + output
-//            computers[index].run()
-//            output = computers[index].outPipe
-//        }
-        for index in 0..<computers.count {
-            computers[index].stdin = [second[index]] + output
-            computers[index].run()
-            print("Stdin: \(computers[index].stdin)")
-            print(computers[index].outPipe)
-            output = computers[index].outPipe
+        var exitCode = Array(repeating: 1, count: 5) {
+            didSet { vprint("Exit code changed to: \(exitCode)\n") }
         }
-    if let first = output.first, first > result {
-        result = first
+        while exitCode != [0,0,0,0,0] {
+            for index in 0..<computers.count {
+                computers[index].stdin += output
+                exitCode[index] = computers[index].run()
+                vprint("Stdin: \(computers[index].stdin)")
+                vprint("Stdout: \(computers[index].stdout)")
+                output = computers[index].stdout
+            }
+            if let last = output.last, last > result {
+                result = last
+            }
+        }
     }
-//    result = output.first > result ? output : result
-//    }
 
     return result
 }
 
 //print(solvePart2(test3))
-//assert(solvePart2(test2) == "")
+assert(solvePart2(test3) == 139629729)
+assert(solvePart2(test4) == 18216)
 
 // MARK: Execution
 func findAnswers(_ string: String) {
@@ -277,7 +278,7 @@ func findAnswers(_ string: String) {
     let answer1 = solvePart1(string)
     print("Part 1 Answer: \(answer1)\nFound in \(CFAbsoluteTimeGetCurrent() - startTime) seconds\n")
 
-    if string == test1 { string = test3 }
+    if string == test1 { string = test4 }
 
     startTime = CFAbsoluteTimeGetCurrent()
     let answer2 = solvePart2(string)
