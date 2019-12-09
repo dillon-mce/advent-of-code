@@ -3,7 +3,7 @@ import Cocoa
 
 // MARK: Input Handling
 let input = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : ""
-var day = "DAY "
+var day = "DAY {{DAY}}"
 day += input == "" ? " – TEST" : ""
 let underscores = Array(repeating: "—", count: day.count).joined()
 

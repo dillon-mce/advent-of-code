@@ -16,12 +16,32 @@ def install():
 
 # Adds a new script with the given day
 def new_script(day):
+    template_name = "_template.swift"
     file_name = "Day-" + day + ".swift"
     input_name = "Day-" + day + "-Input.txt"
-    call(["touch", "_template.swift"])
-    call(["cp", "-n", "_template.swift", file_name])
+    replacements = {
+        "{{DAY}}": day
+    }
+    call(["touch", template_name])
+    call(["cp", "-n", template_name, file_name])
     call(["chmod", "+x", file_name])
     call(["touch", input_name])
+
+    replace_template_elements(file_name, replacements)
+
+    call(["open", input_name])
+    call(["open", file_name])
+
+def replace_template_elements(file_name, replacements):
+    handle = open(file_name, "rt")
+    contents = handle.read()
+    for key in replacements:
+        contents = contents.replace(key, replacements[key])
+    handle.close()
+
+    handle = open(file_name, "wt")
+    handle.write(contents)
+    handle.close()
 
 # Runs the script for the given day, if it exists
 def run_script(day):
