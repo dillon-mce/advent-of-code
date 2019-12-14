@@ -9,7 +9,7 @@ let underscores = Array(repeating: "—", count: day.count).joined()
 
 print("\n\(underscores)\n\(day)\n\(underscores)")
 
-// MARK: Custom Types
+// MARK: Reusable Types
 let verbose = false
 let functions = false
 let lines = false
