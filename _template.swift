@@ -2,7 +2,7 @@
 import Cocoa
 
 // MARK: Input Handling
-let input = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : ""
+let input = UserDefaults.standard.string(forKey: "input") ?? ""
 var day = "DAY {{DAY}}"
 day += input == "" ? " – TEST" : ""
 let underscores = Array(repeating: "—", count: day.count).joined()
@@ -10,7 +10,7 @@ let underscores = Array(repeating: "—", count: day.count).joined()
 print("\n\(underscores)\n\(day)\n\(underscores)")
 
 // MARK: Reusable Types
-let verbose = false
+let verbose = UserDefaults.standard.bool(forKey: "verbose")
 let functions = false
 let lines = false
 

@@ -2,7 +2,7 @@
 import Cocoa
 
 // MARK: Input Handling
-let input = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : ""
+let input = UserDefaults.standard.string(forKey: "input") ?? ""
 var day = "DAY 5"
 day += input == "" ? " – TEST" : ""
 let underscores = Array(repeating: "—", count: day.count).joined()
@@ -10,7 +10,7 @@ let underscores = Array(repeating: "—", count: day.count).joined()
 print("\n\(underscores)\n\(day)\n\(underscores)")
 
 // MARK: Reusable Types
-let verbose = false
+let verbose = UserDefaults.standard.bool(forKey: "verbose")
 let functions = false
 let lines = false
 
@@ -60,6 +60,7 @@ let test4 = "BBFFBBFRLL"
 // MARK: Part 1
 func solvePart1(_ string: String) -> String {
     let seats = parseInput(string)
+    vprint("\(seats)")
     let answer = seats.map(\.id).max() ?? 0
     return "\(answer)"
 }
