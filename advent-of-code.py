@@ -49,7 +49,11 @@ def run_script(day):
     input_name = "Day-" + day + "-Input.txt"
     process = subprocess.Popen(["cat", input_name], stdout=subprocess.PIPE)
     input = process.stdout.read()
-    call([file_name, input])
+    if options.verbose:
+        call([file_name, "-verbose", "true", "-input", input])
+    else:
+        call([file_name, "-input", input])
+
 
 # Runs the the script for the given day with no input, if it extists
 def test_run(day):
@@ -67,7 +71,7 @@ def build_run_script(day):
     print("Compiling the script...")
     call(["swiftc", "-O", "-o", output_name, file_name])
     print("Running the script...")
-    call(["./" + output_name, input])
+    call(["./" + output_name, "-input", input])
 
 # Set up option parser
 parser = optparse.OptionParser()

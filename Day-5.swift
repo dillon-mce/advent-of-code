@@ -3,7 +3,7 @@ import Cocoa
 
 // MARK: Input Handling
 let input = UserDefaults.standard.string(forKey: "input") ?? ""
-var day = "DAY {{DAY}}"
+var day = "DAY 5"
 day += input == "" ? " – TEST" : ""
 let underscores = Array(repeating: "—", count: day.count).joined()
 
@@ -22,27 +22,66 @@ func vprint(_ string: String, separator: String = " ", terminator: String = "\n"
     }
 }
 
-private func parseInput(_ string: String) -> String {
-    
+struct Seat {
+    let row: Int
+    let column: Int
+    var id: Int { row * 8 + column }
+
+    init(_ string: String) {
+        let array = Array(string)
+        let rowRep = array[0..<7]
+        let columnRep = array[7...]
+
+        row = rowRep.reduceBinary("F", range: (0, 127))
+        column = columnRep.reduceBinary("L", range: (0, 7))
+    }
+}
+
+extension Sequence where Element: Equatable {
+    func reduceBinary(_ significant: Element, range: (Int, Int)) -> Int {
+        self.reduce(range) {
+            $1 == significant ?
+            ($0.0, $0.1 - (($0.1-$0.0)/2 + 1)) :
+            ($0.0 + (($0.1-$0.0)/2 + 1), $0.1)
+        }.0
+    }
+}
+
+private func parseInput(_ string: String) -> [Seat] {
+    string.components(separatedBy: .newlines).map(Seat.init)
 }
 
 // MARK: Tests
-let test1 = ""
-let test2 = ""
+let test1 = "FBFBBFFRLR"
+let test2 = "BFFFBBFRRR"
+let test3 = "FFFBBBFRRR"
+let test4 = "BBFFBBFRLL"
 
 // MARK: Part 1
 func solvePart1(_ string: String) -> String {
-
-    return "Answer part 1 here"
+    let seats = parseInput(string)
+    vprint("\(seats)")
+    let answer = seats.map(\.id).max() ?? 0
+    return "\(answer)"
 }
 
+assert(Seat(test1).id == 357)
+assert(Seat(test2).id == 567)
+assert(Seat(test3).id == 119)
+assert(Seat(test4).id == 820)
 //print(solvePart1(test1))
 //assert(solvePart1(test1) == 12)
 
 // MARK: Part 2
 func solvePart2(_ string: String) -> String {
-
-    return "Answer part 2 here"
+    let seats = parseInput(string)
+    let set = Set(seats.map(\.id))
+    let answer = (0..<864).first {
+        !set.contains($0) &&
+        set.contains($0 + 1) &&
+        set.contains($0 - 1)
+    } ?? 0
+    return "\(answer)"
 }
 
 //print(solvePart2(test2))
