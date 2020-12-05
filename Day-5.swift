@@ -60,7 +60,6 @@ let test4 = "BBFFBBFRLL"
 // MARK: Part 1
 func solvePart1(_ string: String) -> String {
     let seats = parseInput(string)
-    vprint("\(seats)")
     let answer = seats.map(\.id).max() ?? 0
     return "\(answer)"
 }
