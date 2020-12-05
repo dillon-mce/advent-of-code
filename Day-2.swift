@@ -9,100 +9,105 @@ let underscores = Array(repeating: "—", count: day.count).joined()
 
 print("\n\(underscores)\n\(day)\n\(underscores)")
 
-// MARK: Custom Types
-class Computer {
-    enum Operation {
-        case binary((Int, Int, Int) -> Void)
-        case unary((Int, Int) -> Void)
-        case exit
+// MARK: Reusable Types
+let verbose = false
+let functions = false
+let lines = false
 
-        func increment() -> Int {
-            switch self {
-            case .binary:
-                return 4
-            case .unary:
-                return 3
-            default:
-                return 1
-            }
+func vprint(_ string: String, separator: String = " ", terminator: String = "\n", function: String = #function, line: Int = #line) {
+    if verbose {
+        let function = functions ? function : ""
+        let line = lines ? String(line) : ""
+        print(function, line, string, separator: separator, terminator: terminator)
+    }
+}
+
+struct PasswordPolicy {
+    let high: Int
+    let low: Int
+    let letter: Character
+
+    init?(string: String) {
+        let numbers = string.components(separatedBy: CharacterSet(charactersIn: " -"))
+            .compactMap(Int.init)
+        guard let low = numbers.first,
+              let high = numbers.last,
+              let letter = string.last else { return nil }
+        self.low = low
+        self.high = high
+        self.letter = letter
+    }
+
+    func approves(_ password: String) -> Bool {
+        let count = password.filter { $0 == letter }.count
+        return count >= low && count <= high
+    }
+
+    func approves2(_ password: String) -> Bool {
+        let array = Array(password)
+        let first = low - 1
+        let second = high - 1
+        guard array.count >= second else { return false }
+        let firstMatches = array[first] == letter
+        let secondMatches = array[second] == letter
+        return firstMatches != secondMatches
+    }
+}
+
+struct Password {
+    let policy: PasswordPolicy
+    let password: String
+
+    init?(string: String) {
+        let halves = string.components(separatedBy: ": ")
+        guard let first = halves.first,
+              let password = halves.last,
+              let policy = PasswordPolicy(string: first) else {
+            return nil
         }
+        self.policy = policy
+        self.password = password
     }
 
-    private func add(_ a: Int, _ b: Int, c: Int) {
-        memory[c] = memory[a] + memory[b]
-    }
-    private func mul(_ a: Int, _ b: Int, c: Int) {
-        memory[c] = memory[a] * memory[b]
-    }
+    func isValid() -> Bool { policy.approves(password) }
 
-    lazy var operations: [Int: Operation] = [
-        1: .binary(add),
-        2: .binary(mul),
-        99: .exit
-    ]
-
-    var storage: [Int] = []
-    private var memory: [Int] = []
-
-    func run() -> [Int] {
-        memory = storage
-        var pointer = 0
-        while true {
-            let opCode = memory[pointer]
-            guard let op = operations[opCode] else {
-                return memory
-            }
-            switch op {
-            case .binary(let handler):
-                let a = memory[pointer+1]
-                let b = memory[pointer+2]
-                let c = memory[pointer+3]
-                handler(a, b, c)
-                pointer += op.increment()
-            case .unary:
-                break
-            case .exit:
-                return memory
-            }
-        }
-    }
+    func isValid2() -> Bool { policy.approves2(password) }
 }
 
 // MARK: Tests
-let test1 = "1,9,10,3,2,3,11,0,99,30,40,50"
-let test2 = "1,1,1,4,99,5,6,0,99"
+let test1 = """
+1-3 a: abcde
+1-3 b: cdefg
+2-9 c: ccccccccc
+"""
+let test2 = ""
 
 // MARK: Part 1
-func solvePart1(_ string: String) -> Int {
-    let computer = Computer()
-    computer.storage = string.components(separatedBy: ",").compactMap { Int($0) }
-    let result = computer.run()
-    return result[0]
+func solvePart1(_ string: String) -> String {
+    let passwords = parseInput(string)
+    let validPasswords = passwords.filter { $0.isValid() }
+
+    return "\(validPasswords.count)"
+}
+
+private func parseInput(_ string: String) -> [Password] {
+    string.components(separatedBy: .newlines)
+        .compactMap(Password.init)
 }
 
 //print(solvePart1(test1))
-assert(solvePart1(test1) == 3500)
-assert(solvePart1(test2) == 30)
+assert(solvePart1(test1) == "2")
 
 // MARK: Part 2
-func solvePart2(_ string: String) -> Int {
-    let target = 19690720
-    let computer = Computer()
-    computer.storage = string.components(separatedBy: ",").compactMap { Int($0) }
-    for noun in 0...99 {
-        for verb in 0...99 {
-            computer.storage[1] = noun
-            computer.storage[2] = verb
-            let result = computer.run()
-            if result[0] == target {
-                return 100 * noun + verb
-            }
-        }
-    }
-    return -1
+func solvePart2(_ string: String) -> String {
+    let passwords = parseInput(string)
+    let validPasswords = passwords.filter { $0.isValid2() }
+
+    return "\(validPasswords.count)"
 }
 
-//assert(solvePart2(test2) == "")
+//print(solvePart2(test2))
+assert(solvePart2(test1) == "1")
 
 // MARK: Execution
 func findAnswers(_ string: String) {

@@ -22,6 +22,10 @@ func vprint(_ string: String, separator: String = " ", terminator: String = "\n"
     }
 }
 
+private func parseInput(_ string: String) -> String {
+    
+}
+
 // MARK: Tests
 let test1 = ""
 let test2 = ""
