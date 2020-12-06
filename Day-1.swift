@@ -47,17 +47,7 @@ private func parseInput(_ string: String) -> [Int] {
         .compactMap(Int.init)
 }
 
-private func findXThatSum(_ total: Int, current: [Int]) -> [Int]? {
-    var set: Set<Int> = []
-    for number in current {
-        let diff = total - number
-        if set.contains(diff) {
-            return [number, diff]
-        }
-        set.insert(number)
-    }
-    return nil
-}
+
 
 //print(solvePart1(test1))
 assert(solvePart1(test1) == "514579")
