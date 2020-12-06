@@ -3,7 +3,7 @@ import Cocoa
 
 // MARK: Input Handling
 let input = UserDefaults.standard.string(forKey: "input") ?? ""
-var day = "DAY 5"
+var day = "DAY 6"
 day += input == "" ? " – TEST" : ""
 let underscores = Array(repeating: "—", count: day.count).joined()
 
@@ -22,69 +22,68 @@ func vprint(_ string: String, separator: String = " ", terminator: String = "\n"
     }
 }
 
-struct Seat {
-    let row: Int
-    let column: Int
-    var id: Int { row * 8 + column }
-
-    init(_ string: String) {
-        let array = Array(string)
-        let rowRep = array[0..<7]
-        let columnRep = array[7...]
-
-        row = rowRep.reduceBinary("F", range: (0, 127))
-        column = columnRep.reduceBinary("L", range: (0, 7))
-    }
+private func parseInput(_ string: String) -> [(String, Int)] {
+    string.components(separatedBy: "\n\n")
+        .map {
+            let lines = $0.components(separatedBy: .whitespacesAndNewlines)
+            let count = lines.count
+            return (lines.joined(), count)
+        }
 }
 
-extension Sequence where Element: Equatable {
-    func reduceBinary(_ significant: Element, range: (Int, Int)) -> Int {
-        self.reduce(range) {
-            $1 == significant ?
-            ($0.0, $0.1 - (($0.1-$0.0)/2 + 1)) :
-            ($0.0 + (($0.1-$0.0)/2 + 1), $0.1)
-        }.0
-    }
-}
 
-private func parseInput(_ string: String) -> [Seat] {
-    string.components(separatedBy: .newlines).map(Seat.init)
+extension Sequence where Element: Hashable {
+    func counts() -> [Element: Int] {
+        self.reduce(into: [Element: Int]()) {
+            $0[$1, default: 0] += 1
+        }
+    }
 }
 
 // MARK: Tests
-let test1 = "FBFBBFFRLR"
-let test2 = "BFFFBBFRRR"
-let test3 = "FFFBBBFRRR"
-let test4 = "BBFFBBFRLL"
+let test1 = """
+abc
+
+a
+b
+c
+
+ab
+ac
+
+a
+a
+a
+a
+
+b
+"""
+let test2 = ""
 
 // MARK: Part 1
 func solvePart1(_ string: String) -> String {
-    let seats = parseInput(string)
-    let answer = seats.map(\.id).max() ?? 0
+    let groups = parseInput(string)
+    let answer = groups.map { Set(Array($0.0)).count }
+        .reduce(0, +)
     return "\(answer)"
 }
 
-assert(Seat(test1).id == 357)
-assert(Seat(test2).id == 567)
-assert(Seat(test3).id == 119)
-assert(Seat(test4).id == 820)
 //print(solvePart1(test1))
-//assert(solvePart1(test1) == 12)
+assert(solvePart1(test1) == "11")
 
 // MARK: Part 2
 func solvePart2(_ string: String) -> String {
-    let seats = parseInput(string)
-    let set = Set(seats.map(\.id))
-    let answer = (0..<864).first {
-        !set.contains($0) &&
-        set.contains($0 + 1) &&
-        set.contains($0 - 1)
-    } ?? 0
+    let groups = parseInput(string)
+    let answer = groups.map { (line, count) -> Int in
+        line.counts().filter {
+            $0.1 == count
+        }.count
+    }.reduce(0, +)
     return "\(answer)"
 }
 
-//print(solvePart2(test2))
-//assert(solvePart2(test2) == "")
+//print(solvePart2(test1))
+assert(solvePart2(test1) == "6")
 
 // MARK: Execution
 func findAnswers(_ string: String) {
