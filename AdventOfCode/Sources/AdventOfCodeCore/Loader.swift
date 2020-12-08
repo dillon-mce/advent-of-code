@@ -16,6 +16,7 @@ class Loader {
         case 5: return Day5()
         case 6: return Day6()
         case 7: return Day7()
+        case 8: return Day8()
         default: throw AdventOfCodeError.noSolutionFound
         }
     }
