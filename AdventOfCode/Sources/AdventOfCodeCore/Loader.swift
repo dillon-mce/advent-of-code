@@ -10,6 +10,7 @@ class Loader {
     func solution(for day: Int) throws -> Solution {
         switch day {
         case 1: return Day1()
+        case 2: return Day2()
         default: throw AdventOfCodeError.noSolutionFound
         }
     }
