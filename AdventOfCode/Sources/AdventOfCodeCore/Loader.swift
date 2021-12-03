@@ -10,16 +10,6 @@ class Loader {
     func solution(for day: Int) throws -> Solution {
         switch day {
         case 1: return Day1()
-        case 2: return Day2()
-        case 3: return Day3()
-        case 4: return Day4()
-        case 5: return Day5()
-        case 6: return Day6()
-        case 7: return Day7()
-        case 8: return Day8()
-        case 9: return Day9(length: 25)
-        case 10: return Day10()
-        case 11: return Day11()
         default: throw AdventOfCodeError.noSolutionFound
         }
     }
